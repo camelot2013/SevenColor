@@ -72,9 +72,9 @@ public class ExcelOperation {
 		for (short c = 0; c < columns; c++) { // 循环遍历行中的单元格        
 			Cell cell = row.getCell((short) c); 
 			if(isMergedRegion(cell.getSheet(), cell.getRowIndex(), c))
-				System.out.println(getMergedRegionValue(cell.getSheet(), cell.getRowIndex(), c));
-			System.out.println(cell.toString());
-			keyList.add(cell.toString());
+				keyList.add(getMergedRegionValue(cell.getSheet(), cell.getRowIndex(), c));
+			else
+				keyList.add(cell.toString());
 		}
 	}
 	/**  
