@@ -21,13 +21,15 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExcelOperation {
-	private List<String> keyList =null;
 	private int columns =0;
-	ExcelOperation(){
-		keyList = new ArrayList<String>();
+	private File excelFile =null;
+	String excelType ="";
+	ExcelOperation(File file, String type){
+		excelFile = file;
+		excelType = type;
 	}
 	
-	public List<Map<String, Object>> readExcelContent(File excelFile, String sheetName, String excelType, int iHeadLines)throws Exception{
+	public List<Map<String, Object>> readExcelContent(String sheetName, int iHeadLines)throws Exception{
 		if(excelType.equals("xls")){
 			return readExcelContentXls(excelFile,sheetName, iHeadLines);
 		}else if(excelType.equals("xlsx")){
@@ -41,41 +43,74 @@ public class ExcelOperation {
 		Map<String, Object> rowMap = new HashMap<String, Object>();
 		for (short c = 0; c < columns; c++) { // 循环遍历行中的单元格     
 			Cell cell = row.getCell((short) c); 
-			if (cell != null) {
-				String sKey = keyList.get(c);
-				switch(cell.getCellTypeEnum()){
-				case STRING:
-					rowMap.put(sKey, cell.getStringCellValue());
-					break;
-				case NUMERIC:
-					if(DateUtil.isCellDateFormatted(cell)){
-						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); 
-						rowMap.put(sKey, sdf.format(cell.getDateCellValue()).toString());
-					}else{
-						rowMap.put(sKey, cell.getNumericCellValue());
-					}
-					break;
-				case BOOLEAN:
-					rowMap.put(sKey, cell.getBooleanCellValue());
-					break;
-				default:
-					rowMap.put(sKey, cell.getStringCellValue());
-					break;
-				}
-			}
+			rowMap.put(""+c, getCellValue(cell));
 		}
 		sheetContenList.add(rowMap);
-		
 	}
-	private void initKeyList(Row row)throws Exception{
-		columns = row.getLastCellNum();
-		for (short c = 0; c < columns; c++) { // 循环遍历行中的单元格        
-			Cell cell = row.getCell((short) c); 
-			if(isMergedRegion(cell.getSheet(), cell.getRowIndex(), c))
-				keyList.add(getMergedRegionValue(cell.getSheet(), cell.getRowIndex(), c));
-			else
-				keyList.add(cell.toString());
+//	public String getCellValue(int iRow, int iColumn)throws Exception{
+//		String sResult ="";
+//		
+//		if(iRow<0)
+//			return sResult;
+//		if(iColumn<0)
+//			return sResult;
+//		
+//		return sResult;
+//	}
+	private String getCellValue(Cell cell)throws Exception{
+		String sResult ="";
+		Cell fCell =null;
+		if(cell == null)
+			return sResult;
+		
+		if(isMergedRegion(cell.getSheet(), cell.getRowIndex(), cell.getColumnIndex())){
+			Sheet sheet = cell.getSheet();
+			int row = cell.getRowIndex();
+			int column = cell.getColumnIndex();
+			int sheetMergeCount = sheet.getNumMergedRegions();    
+	        
+		    for(int i = 0 ; i < sheetMergeCount ; i++){    
+		        CellRangeAddress ca = sheet.getMergedRegion(i);    
+		        int firstColumn = ca.getFirstColumn();    
+		        int lastColumn = ca.getLastColumn();    
+		        int firstRow = ca.getFirstRow();    
+		        int lastRow = ca.getLastRow();    
+		            
+		        if(row >= firstRow && row <= lastRow){    
+		                
+		            if(column >= firstColumn && column <= lastColumn){    
+		                Row fRow = sheet.getRow(firstRow);    
+		                fCell = fRow.getCell(firstColumn);    
+		                break;
+		            }    
+		        }    
+		    }    
+		}else{
+			fCell = cell;
 		}
+		switch(fCell.getCellTypeEnum()){
+		case STRING:
+			sResult = fCell.getStringCellValue();
+			break;
+		case NUMERIC:
+			if(DateUtil.isCellDateFormatted(fCell)){
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); 
+				sResult = sdf.format(fCell.getDateCellValue()).toString();
+			}else{
+				sResult = String.valueOf(fCell.getNumericCellValue());
+			}
+			break;
+		case BOOLEAN:
+			sResult = String.valueOf(fCell.getBooleanCellValue());
+			break;
+		default:
+			sResult = fCell.getStringCellValue();
+			break;
+		}
+		return sResult;
+	}
+	private void getColumns(Row row)throws Exception{
+		columns = row.getLastCellNum();
 	}
 	/**  
 	* 判断指定的单元格是否是合并单元格  
@@ -100,36 +135,7 @@ public class ExcelOperation {
 		}  
 		return false;  
 	}
-	/**   
-	* 获取合并单元格的值   
-	* @param sheet   
-	* @param row   
-	* @param column   
-	* @return   
-	*/    
-	public String getMergedRegionValue(Sheet sheet ,int row , int column){    
-	    int sheetMergeCount = sheet.getNumMergedRegions();    
-	        
-	    for(int i = 0 ; i < sheetMergeCount ; i++){    
-	        CellRangeAddress ca = sheet.getMergedRegion(i);    
-	        int firstColumn = ca.getFirstColumn();    
-	        int lastColumn = ca.getLastColumn();    
-	        int firstRow = ca.getFirstRow();    
-	        int lastRow = ca.getLastRow();    
-	            
-	        if(row >= firstRow && row <= lastRow){    
-	                
-	            if(column >= firstColumn && column <= lastColumn){    
-	                Row fRow = sheet.getRow(firstRow);    
-	                Cell fCell = fRow.getCell(firstColumn);    
-	                return fCell.getStringCellValue() ;    
-	            }    
-	        }    
-	    }    
-	        
-	    return null ;    
-	}   
-	public List<Map<String, Object>> readExcelContentXls(File excelFile, String sheetName, int iHeadLines)throws Exception{
+	private List<Map<String, Object>> readExcelContentXls(File excelFile, String sheetName, int iHeadLines)throws Exception{
 		List<Map<String, Object>> sheetContenList = null;
 		// 創建對Excel工作簿文件的引用
         HSSFWorkbook workbook = new HSSFWorkbook(new FileInputStream(excelFile));
@@ -147,8 +153,9 @@ public class ExcelOperation {
            for(int iRow =0; iRow <rows; iRow++){
         	   Row row = sheet.getRow(iRow);
         	   if(row !=null){
-        		   if(iRow ==iHeadLines)
-        			   initKeyList(sheet.getRow(iRow));
+        		   if(iRow ==iHeadLines){
+        			   getColumns(sheet.getRow(iRow));
+        		   }
         		   else if(iRow >=iHeadLines)
         			   putRow2List(row, sheetContenList);
         	   }
@@ -158,7 +165,7 @@ public class ExcelOperation {
        }
        return sheetContenList;
 	}
-	public List<Map<String, Object>> readExcelContentXlsx(File excelFile, String sheetName, int iHeadLines)throws Exception{
+	private List<Map<String, Object>> readExcelContentXlsx(File excelFile, String sheetName, int iHeadLines)throws Exception{
 		List<Map<String, Object>> sheetContenList = null;
 		Workbook workbook = new XSSFWorkbook(new FileInputStream(excelFile));  
 		try{
@@ -173,7 +180,7 @@ public class ExcelOperation {
 				Row row = sheet.getRow(iRow);
 	        	if(row !=null){
 	        		if(iRow ==iHeadLines-1)
-	        			initKeyList(sheet.getRow(iRow));
+	        			getColumns(sheet.getRow(iRow));
 	        		else if(iRow >=iHeadLines)
 	        			putRow2List(row, sheetContenList);
 	        	}

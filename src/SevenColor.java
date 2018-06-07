@@ -8,9 +8,9 @@ public class SevenColor {
 		// TODO 自动生成的方法存根
 		String excelPath = "D:\\tmp\\区域产品构成维度-品类分解.xlsx";
 		File excelFile = new File(excelPath);
-		ExcelOperation excelOp1 = new ExcelOperation();
+		ExcelOperation excelOp1 = new ExcelOperation(excelFile, "xlsx");
 		try {
-			List<Map<String, Object>> sheetContent = excelOp1.readExcelContent(excelFile, "Sheet1", "xlsx", 2);
+			List<Map<String, Object>> sheetContent = excelOp1.readExcelContent("Sheet1",  2);
 			for(int i=0; i<sheetContent.size(); i++){
 				System.out.println(sheetContent.get(i).toString());
 			}
