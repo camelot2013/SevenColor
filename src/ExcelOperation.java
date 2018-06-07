@@ -23,12 +23,26 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class ExcelOperation {
 	private int columns =0;
 	private File excelFile =null;
-	String excelType ="";
+	private String excelType ="";
 	ExcelOperation(File file, String type){
 		excelFile = file;
 		excelType = type;
 	}
+	ExcelOperation(File file){
+		excelFile = file;
+		excelType = "xls";
+	}
 	
+	
+	public List<Map<String, Object>> readExcelContent()throws Exception{
+		return readExcelContent("Sheet1", 1);
+	}
+	public List<Map<String, Object>> readExcelContent(int iHeadLines)throws Exception{
+		return readExcelContent("Sheet1", iHeadLines);
+	}
+	public List<Map<String, Object>> readExcelContent(String sheetName)throws Exception{
+		return readExcelContent(sheetName, 1);
+	}
 	public List<Map<String, Object>> readExcelContent(String sheetName, int iHeadLines)throws Exception{
 		if(excelType.equals("xls")){
 			return readExcelContentXls(excelFile,sheetName, iHeadLines);
@@ -47,16 +61,6 @@ public class ExcelOperation {
 		}
 		sheetContenList.add(rowMap);
 	}
-//	public String getCellValue(int iRow, int iColumn)throws Exception{
-//		String sResult ="";
-//		
-//		if(iRow<0)
-//			return sResult;
-//		if(iColumn<0)
-//			return sResult;
-//		
-//		return sResult;
-//	}
 	private String getCellValue(Cell cell)throws Exception{
 		String sResult ="";
 		Cell fCell =null;
@@ -136,6 +140,7 @@ public class ExcelOperation {
 		return false;  
 	}
 	private List<Map<String, Object>> readExcelContentXls(File excelFile, String sheetName, int iHeadLines)throws Exception{
+		columns =0;
 		List<Map<String, Object>> sheetContenList = null;
 		// 創建對Excel工作簿文件的引用
         HSSFWorkbook workbook = new HSSFWorkbook(new FileInputStream(excelFile));
@@ -166,6 +171,7 @@ public class ExcelOperation {
        return sheetContenList;
 	}
 	private List<Map<String, Object>> readExcelContentXlsx(File excelFile, String sheetName, int iHeadLines)throws Exception{
+		columns =0;
 		List<Map<String, Object>> sheetContenList = null;
 		Workbook workbook = new XSSFWorkbook(new FileInputStream(excelFile));  
 		try{

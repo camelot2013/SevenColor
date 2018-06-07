@@ -10,9 +10,13 @@ public class SevenColor {
 		File excelFile = new File(excelPath);
 		ExcelOperation excelOp1 = new ExcelOperation(excelFile, "xlsx");
 		try {
-			List<Map<String, Object>> sheetContent = excelOp1.readExcelContent("Sheet1",  2);
-			for(int i=0; i<sheetContent.size(); i++){
-				System.out.println(sheetContent.get(i).toString());
+			List<Map<String, Object>> sheetContent1 = excelOp1.readExcelContent("Sheet1",  2);
+			for(int i=0; i<sheetContent1.size(); i++){
+				System.out.println(sheetContent1.get(i).toString());
+			}
+			List<Map<String, Object>> sheetContent2 = excelOp1.readExcelContent("Sheet2");
+			for(int i=0; i<sheetContent2.size(); i++){
+				System.out.println(sheetContent2.get(i).toString());
 			}
 		} catch (Exception e) {
 			// TODO 自动生成的 catch 块
